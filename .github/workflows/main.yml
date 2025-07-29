@@ -40,17 +40,21 @@ jobs:
         run: terraform apply -auto-approve tfplan
         working-directory: devsecops-terraform
 
-      - name: Extract EC2 IP from Terraform Output
-        id: ip
+      - name: Extract EC2 IP and Write Private Key to File
+        id: tf_output
         run: |
           echo "EC2_IP=$(terraform output -raw public_ip)" >> $GITHUB_OUTPUT
+
+          echo "Writing private key to file..."
+          terraform output -raw private_key_pem > private_key.pem
+          chmod 600 private_key.pem
         working-directory: devsecops-terraform
 
       - name: Wait for EC2 Services (SonarQube, Nexus)
         run: |
-          echo "Waiting for EC2 (${{ steps.ip.outputs.EC2_IP }}) to be ready..."
+          echo "Waiting for EC2 (${{ steps.tf_output.outputs.EC2_IP }}) to be ready..."
           for i in {1..30}; do
-            nc -zv ${{ steps.ip.outputs.EC2_IP }} 22 && break
+            nc -zv ${{ steps.tf_output.outputs.EC2_IP }} 22 && break
             echo "Retry $i..."
             sleep 10
           done
@@ -58,9 +62,9 @@ jobs:
       - name: SSH into EC2 and Setup Services
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ steps.ip.outputs.EC2_IP }}
+          host: ${{ steps.tf_output.outputs.EC2_IP }}
           username: ubuntu
-          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          key: devsecops-terraform/private_key.pem
           script: |
             chmod +x install.sh
             ./install.sh
