@@ -1,68 +1,5 @@
-name: DevSecOps CI/CD Pipeline
-
-on:
-  push:
-    branches:
-      - main
-
-env:
-  TF_IN_AUTOMATION: true
-  AWS_REGION: us-east-1
-  INSTANCE_USERNAME: ubuntu
-  SONARQUBE_URL: http://localhost:9000
-  NEXUS_URL: http://localhost:8081
-  NEXUS_USER: admin
-  NEXUS_PASS: admin
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
-jobs:
-  provision:
-    name: "Provision EC2 & Tools"
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.5.7
-
-      - name: Terraform Init
-        run: terraform init
-        working-directory: devsecops-terraform
-
-      - name: Terraform Plan
-        run: terraform plan -out=tfplan
-        working-directory: devsecops-terraform
-
-      - name: Terraform Apply
-        run: terraform apply -auto-approve tfplan
-        working-directory: devsecops-terraform
-
-      - name: Extract EC2 IP and Private Key
-        id: tf_output
-        run: |
-          echo "EC2_IP=$(terraform output -raw public_ip)" >> $GITHUB_OUTPUT
-          echo "private_key_pem<<EOF" >> $GITHUB_OUTPUT
-          terraform output -raw private_key_pem >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-        working-directory: devsecops-terraform
-
-      - name: Debug private key output (optional)
-        run: |
-          echo "${{ steps.tf_output.outputs.private_key_pem }}" | head -20
-
-      - name: Wait for EC2 Services (SonarQube, Nexus)
-        run: |
-          echo "Waiting for EC2 (${{ steps.tf_output.outputs.EC2_IP }}) to be ready..."
-          for i in {1..30}; do
-            nc -zv ${{ steps.tf_output.outputs.EC2_IP }} 22 && break
-            echo "Retry $i..."
-            sleep 10
-          done
+      - name: Confirm install.sh exists
+        run: ls -la devsecops-terraform/
 
       - name: Copy install.sh to EC2
         uses: appleboy/scp-action@v0.1.5
@@ -70,7 +7,7 @@ jobs:
           host: ${{ steps.tf_output.outputs.EC2_IP }}
           username: ubuntu
           key: ${{ steps.tf_output.outputs.private_key_pem }}
-          source: devsecops-terraform/install.sh    # Make sure this path is correct
+          source: devsecops-terraform/install.sh
           target: ~/
 
       - name: SSH into EC2 and Setup Services
@@ -82,6 +19,3 @@ jobs:
           script: |
             chmod +x install.sh
             ./install.sh
-
-      - name: Print Done
-        run: echo "✅ DevSecOps environment is up and running."
