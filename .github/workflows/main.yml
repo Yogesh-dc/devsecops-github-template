@@ -55,7 +55,7 @@ jobs:
         run: |
           echo "${{ steps.tf_output.outputs.private_key_pem }}" | head -20
 
-      - name: Wait for EC2 Services (SonarQube, Nexus)
+      - name: Wait for EC2 to be Ready
         run: |
           echo "Waiting for EC2 (${{ steps.tf_output.outputs.EC2_IP }}) to be ready..."
           for i in {1..30}; do
@@ -64,8 +64,12 @@ jobs:
             sleep 10
           done
 
-      - name: Confirm local files to copy
-        run: ls -la
+      - name: Confirm local files to be copied
+        run: |
+          echo "📦 Workspace contents:"
+          ls -la
+          echo "📁 src/ directory:"
+          ls -la src || echo "src directory missing!"
 
       - name: Copy app files and install.sh to EC2
         uses: appleboy/scp-action@v0.1.5
@@ -78,7 +82,7 @@ jobs:
             Dockerfile
             pom.xml
             src/
-          target: ~/
+          target: ~/app
 
       - name: SSH into EC2 and Setup Services
         uses: appleboy/ssh-action@v1.0.3
@@ -87,6 +91,7 @@ jobs:
           username: ubuntu
           key: ${{ steps.tf_output.outputs.private_key_pem }}
           script: |
+            cd ~/app
             chmod +x install.sh
             ./install.sh
 
