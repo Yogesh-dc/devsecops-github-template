@@ -83,7 +83,7 @@ resource "aws_instance" "devsecops_instance" {
   ami                    = "ami-007020fd9c84e18c7" # Ubuntu 20.04 LTS in ap-south-1
   instance_type          = "t2.medium"
   key_name               = aws_key_pair.deployer.key_name
-  vpc_security_group_ids = [aws_security_group.devsecops_sg.id]
+  vpc_security_group_ids = [aws_security_group.DevSecOps01_sg.id]
 
   tags = {
     Name = "DevSecOps-EC2"
