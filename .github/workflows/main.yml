@@ -71,6 +71,14 @@ jobs:
           echo "📁 src/ directory:"
           ls -la src || echo "src directory missing!"
 
+      - name: Create target directory on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ steps.tf_output.outputs.EC2_IP }}
+          username: ubuntu
+          key: ${{ steps.tf_output.outputs.private_key_pem }}
+          script: mkdir -p ~/app
+
       - name: Copy app files and install.sh to EC2
         uses: appleboy/scp-action@v0.1.5
         with:
