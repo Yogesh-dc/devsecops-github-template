@@ -93,7 +93,3 @@ resource "aws_instance" "devsecops_instance" {
     command = "echo ${self.public_ip} > ec2_ip.txt"
   }
 }
-
-
-
-
