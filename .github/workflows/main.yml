@@ -73,7 +73,7 @@ jobs:
           host: ${{ steps.tf_output.outputs.EC2_IP }}
           username: ubuntu
           key: ${{ steps.tf_output.outputs.private_key_pem }}
-          source: devsecops-terraform/install.sh
+          source: install.sh
           target: ~/
 
       - name: SSH into EC2 and Setup Services
