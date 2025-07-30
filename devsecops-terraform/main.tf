@@ -9,7 +9,7 @@ resource "tls_private_key" "ssh_key" {
 }
 
 # Create AWS Key Pair
-resource "aws_key_pair" "deployerr" {
+resource "aws_key_pair" "deployer" {
   key_name   = "officekey"
   public_key = tls_private_key.ssh_key.public_key_openssh
 }
