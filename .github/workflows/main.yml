@@ -13,6 +13,8 @@ env:
   NEXUS_URL: http://localhost:8081
   NEXUS_USER: admin
   NEXUS_PASS: admin
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}           # <-- Add here
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}   # <-- Add here
 
 jobs:
   provision:
@@ -44,7 +46,6 @@ jobs:
         id: tf_output
         run: |
           echo "EC2_IP=$(terraform output -raw public_ip)" >> $GITHUB_OUTPUT
-
           echo "Writing private key to file..."
           terraform output -raw private_key_pem > private_key.pem
           chmod 600 private_key.pem
