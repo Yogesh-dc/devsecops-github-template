@@ -64,16 +64,20 @@ jobs:
             sleep 10
           done
 
-      - name: Confirm install.sh exists
-        run: ls -la devsecops-terraform/
+      - name: Confirm local files to copy
+        run: ls -la
 
-      - name: Copy install.sh to EC2
+      - name: Copy app files and install.sh to EC2
         uses: appleboy/scp-action@v0.1.5
         with:
           host: ${{ steps.tf_output.outputs.EC2_IP }}
           username: ubuntu
           key: ${{ steps.tf_output.outputs.private_key_pem }}
-          source: install.sh
+          source: |
+            install.sh
+            Dockerfile
+            pom.xml
+            src/
           target: ~/
 
       - name: SSH into EC2 and Setup Services
@@ -88,6 +92,3 @@ jobs:
 
       - name: Print Done
         run: echo "✅ DevSecOps environment is up and running."
-
-
-
