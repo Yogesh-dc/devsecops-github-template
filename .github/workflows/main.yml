@@ -13,8 +13,8 @@ env:
   NEXUS_URL: http://localhost:8081
   NEXUS_USER: admin
   NEXUS_PASS: admin
-  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}           # <-- Add here
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}   # <-- Add here
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
 jobs:
   provision:
@@ -42,14 +42,18 @@ jobs:
         run: terraform apply -auto-approve tfplan
         working-directory: devsecops-terraform
 
-      - name: Extract EC2 IP and Write Private Key to File
+      - name: Extract EC2 IP and Private Key
         id: tf_output
         run: |
           echo "EC2_IP=$(terraform output -raw public_ip)" >> $GITHUB_OUTPUT
-          echo "Writing private key to file..."
-          terraform output -raw private_key_pem > private_key.pem
-          chmod 600 private_key.pem
+          echo "private_key_pem<<EOF" >> $GITHUB_OUTPUT
+          terraform output -raw private_key_pem >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
         working-directory: devsecops-terraform
+
+      - name: Debug private key output (optional)
+        run: |
+          echo "${{ steps.tf_output.outputs.private_key_pem }}" | head -20
 
       - name: Wait for EC2 Services (SonarQube, Nexus)
         run: |
@@ -65,7 +69,7 @@ jobs:
         with:
           host: ${{ steps.tf_output.outputs.EC2_IP }}
           username: ubuntu
-          key: devsecops-terraform/private_key.pem
+          key: ${{ steps.tf_output.outputs.private_key_pem }}
           script: |
             chmod +x install.sh
             ./install.sh
