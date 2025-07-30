@@ -22,8 +22,8 @@ resource "local_file" "private_key" {
 }
 
 # Security Group with required open ports
-resource "aws_security_group" "devsecops_sg" {
-  name        = "Devsecops-sg"
+resource "aws_security_group" "DevSecOps01_sg" {
+  name        = "DevSecOps01_sg"
   description = "Allow SSH, Apache, App, Nexus, SonarQube ports"
   
   ingress {
