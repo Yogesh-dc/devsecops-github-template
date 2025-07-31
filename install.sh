@@ -40,4 +40,4 @@ echo "📍 SonarQube:  http://<EC2-IP>:9000"
 echo "📍 Nexus:      http://<EC2-IP>:8081"
 echo "📍 Apache2:    http://<EC2-IP>"
 echo "🔗 Access your application and tools using the above URLs."
-echo
+echo "🔗 Remember to replace <EC2-IP> with your EC2 instance's public IP address."
