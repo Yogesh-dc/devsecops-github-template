@@ -76,7 +76,7 @@ jobs:
             install.sh
             Dockerfile
             pom.xml
-            src/
+            ./devsecops-github-template/
           target: ~/app
 
       - name: 🚀 Run install.sh on EC2
