@@ -22,22 +22,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: 📦 Checkout Code
         uses: actions/checkout@v3
 
-      - name: Setup Terraform
+      - name: ⚙️ Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.5.7
 
-      - name: Terraform Init & Apply
+      - name: 🔧 Terraform Init, Plan & Apply
         working-directory: devsecops-terraform
         run: |
           terraform init
           terraform plan -out=tfplan
           terraform apply -auto-approve tfplan
 
-      - name: Extract EC2 Details
+      - name: 📤 Extract EC2 IP and SSH Key
         id: tf_output
         working-directory: devsecops-terraform
         run: |
@@ -46,24 +46,27 @@ jobs:
           terraform output -raw private_key_pem >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Wait for SSH
+      - name: ⏳ Wait for EC2 SSH to become available
         run: |
-          echo "Waiting for EC2 (${{ steps.tf_output.outputs.EC2_IP }}) to be ready..."
+          echo "Waiting for SSH access to EC2 (${{ steps.tf_output.outputs.EC2_IP }})..."
           for i in {1..30}; do
             nc -zv ${{ steps.tf_output.outputs.EC2_IP }} 22 && break
             echo "Retry $i..."
             sleep 10
           done
 
-      - name: Create app directory on EC2
+      - name: 📁 Create app directory on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ steps.tf_output.outputs.EC2_IP }}
           username: ubuntu
           key: ${{ steps.tf_output.outputs.private_key_pem }}
+          port: 22
+          timeout: 30s
+          command_timeout: 10m
           script: mkdir -p ~/app
 
-      - name: Copy App Files to EC2
+      - name: 📂 Copy app files to EC2
         uses: appleboy/scp-action@v0.1.5
         with:
           host: ${{ steps.tf_output.outputs.EC2_IP }}
@@ -76,7 +79,7 @@ jobs:
             src/
           target: ~/app
 
-      - name: SSH into EC2 and Run Setup
+      - name: 🚀 Run install.sh on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ steps.tf_output.outputs.EC2_IP }}
@@ -87,5 +90,5 @@ jobs:
             chmod +x install.sh
             ./install.sh
 
-      - name: Done
+      - name: ✅ Pipeline Complete
         run: echo "✅ CI/CD pipeline completed successfully."
