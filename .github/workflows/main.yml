@@ -92,3 +92,5 @@ jobs:
 
       - name: ✅ Pipeline Complete
         run: echo "✅ CI/CD pipeline completed successfully."
+             echo "🔗 Access your application and tools using the following URLs:"
+            
