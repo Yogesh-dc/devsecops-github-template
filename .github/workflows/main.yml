@@ -91,6 +91,6 @@ jobs:
             ./install.sh
 
       - name: ✅ Pipeline Complete
-        run: echo "✅ CI/CD pipeline completed successfully."
+        run: echo "✅ CI/CD pipeline completed successful  ly."
              echo "🔗 Access your application and tools using theURL:"
             
