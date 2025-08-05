@@ -71,7 +71,7 @@ jobs:
           echo "${{ steps.tf_output.outputs.private_key_pem }}" > ec2_key.pem
           chmod 600 ec2_key.pem
           rsync -avz -e "ssh -i ec2_key.pem -o StrictHostKeyChecking=no" \
-            install.sh Dockerfile pom.xml ./devsecops-github-template/ \
+            install.sh Dockerfile pom.xml src/ \
             ubuntu@${{ steps.tf_output.outputs.EC2_IP }}:~/app/
 
       - name: 🚀 Run install.sh on EC2
