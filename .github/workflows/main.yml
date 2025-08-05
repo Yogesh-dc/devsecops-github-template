@@ -7,7 +7,7 @@ on:
 
 env:
   TF_IN_AUTOMATION: true
-  AWS_REGION: us-east-1
+  AWS_REGION: ap-south-1
   INSTANCE_USERNAME: ubuntu
   SONARQUBE_URL: http://localhost:9000
   NEXUS_URL: http://localhost:8081
@@ -66,18 +66,13 @@ jobs:
           command_timeout: 10m
           script: mkdir -p ~/app
 
-      - name: 📂 Copy app files to EC2
-        uses: appleboy/scp-action@v0.1.5
-        with:
-          host: ${{ steps.tf_output.outputs.EC2_IP }}
-          username: ubuntu
-          key: ${{ steps.tf_output.outputs.private_key_pem }}
-          source: |
-            install.sh
-            Dockerfile
-            pom.xml
-            ./devsecops-github-template/
-          target: ~/app
+      - name: 📂 Copy app files to EC2 using rsync
+        run: |
+          echo "${{ steps.tf_output.outputs.private_key_pem }}" > ec2_key.pem
+          chmod 600 ec2_key.pem
+          rsync -avz -e "ssh -i ec2_key.pem -o StrictHostKeyChecking=no" \
+            install.sh Dockerfile pom.xml ./devsecops-github-template/ \
+            ubuntu@${{ steps.tf_output.outputs.EC2_IP }}:~/app/
 
       - name: 🚀 Run install.sh on EC2
         uses: appleboy/ssh-action@v1.0.3
@@ -91,6 +86,6 @@ jobs:
             ./install.sh
 
       - name: ✅ Pipeline Complete
-        run: echo "✅ CI/CD pipeline completed successful  ly."
-             echo "🔗 Access your application and tools using theURL:"
-            
+        run: |
+          echo "✅ CI/CD pipeline completed successfully."
+          echo "🔗 Access your application and tools using the URL:"
